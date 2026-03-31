@@ -27,11 +27,19 @@ jobs:
           npm run build
           rm -rf android
           npx cap add android
-          # บรรทัดนี้สำคัญมากครับเฮีย เป็นการสั่งให้แอพขอสิทธิ์ใช้อินเทอร์เน็ตบน Android
+          
+          # --- ส่วนขอสิทธิ์การใช้งาน (Permissions) ---
+          # 1. ขอสิทธิ์อินเทอร์เน็ต (เพื่อให้แปลภาษาได้)
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          # 2. ขอสิทธิ์ใช้กล้อง (เพื่อฟังก์ชันถ่ายรูปแปลภาษา)
+          sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
+          # 3. ขอสิทธิ์ใช้ไมโครโฟน (เพื่อฟังก์ชันสั่งงานด้วยเสียง)
+          sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
+          
           npx cap sync android
         env:
-          # ส่วนนี้คือการดึงกุญแจจาก Secret ที่เฮียเพิ่งตั้งค่ามาใส่ในแอพครับ
+          # ส่วนดึงกุญแจจาก GitHub Secrets ที่เฮียตั้งค่าไว้
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
