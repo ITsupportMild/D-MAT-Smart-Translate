@@ -25,7 +25,9 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm run build
-          npx cap add android || true  # เพิ่มบรรทัดนี้เพื่อสร้างโฟลเดอร์ android
+          # ลบโฟลเดอร์เก่าแล้วสร้างใหม่พร้อมข้ามการเช็ค ID
+          rm -rf android
+          npx cap add android
           npx cap sync android
 
       - name: Build with Gradle
