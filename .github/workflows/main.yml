@@ -13,7 +13,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'  # ปรับเป็น 21 ตามที่ระบบต้องการครับเฮีย
           distribution: 'temurin'
 
       - name: Set up Node.js
@@ -25,7 +25,6 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm run build
-          # ลบโฟลเดอร์เก่าแล้วสร้างใหม่พร้อมข้ามการเช็ค ID
           rm -rf android
           npx cap add android
           npx cap sync android
