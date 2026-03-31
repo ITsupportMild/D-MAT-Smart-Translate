@@ -1,13 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hiaouan.smarttranslate',
+  appId: 'com.hiaouan.smarttranslate', // หรือชื่อที่เฮียตั้งไว้ล่าสุด
   appName: 'AI Translate',
-  webDir: 'dist',
-  server: {
-    url: 'https://08fd44f3-a7de-4453-b814-2220f5019333.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
+  webDir: 'dist' // ตรงนี้สำคัญมาก ต้องมั่นใจว่าเป็น 'dist'
 };
 
 export default config;
