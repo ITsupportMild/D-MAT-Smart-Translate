@@ -21,28 +21,25 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Dependencies & Setup App
+      - name: Install Dependencies & Fix Hardware
         run: |
           npm install --legacy-peer-deps
-          # ติดตั้งปลั๊กอินสำหรับ กล้อง เสียง และไอคอน (สะกดชื่อใหม่ให้ถูกตามระบบครับ)
-          npm install @capacitor/assets @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
+          # ติดตั้งปลั๊กอินสะพานเชื่อมตัวเครื่อง
+          npm install @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech @capacitor-community/voice-recorder --legacy-peer-deps
           
           npm run build
           rm -rf android
           npx cap add android
           
-          # --- ปั้นไอคอนจากไฟล์ public/icon.png ของเฮีย ---
-          npx capacitor-assets generate --android --assetPath public/icon.png
-          
-          # --- เขียนสิทธิ์ขอใช้เน็ต กล้อง และไมค์ ลงในระบบ Android ---
+          # บังคับขอสิทธิ์ระดับ Hardware (กล้อง/ไมค์/เสียง)
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i <uses-feature android:name="android.hardware.camera" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i <uses-feature android:name="android.hardware.camera" android:required="true" />' android/app/src/main/AndroidManifest.xml
           
           npx cap sync android
         env:
-          # ส่วนนี้สำคัญมาก! ถ้าไม่มี 3 บรรทัดนี้แอปจะแปลภาษาไม่ได้ครับเฮีย
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -53,8 +50,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload APK Artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HiaOuan-App-Complete
+          name: HiaOuan-Smart-App-Final
           path: android/app/build/outputs/apk/debug/app-debug.apk
