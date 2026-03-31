@@ -13,7 +13,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '21'  # ปรับเป็น 21 ตามที่ระบบต้องการครับเฮีย
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Set up Node.js
@@ -27,7 +27,14 @@ jobs:
           npm run build
           rm -rf android
           npx cap add android
+          # บรรทัดนี้สำคัญมากครับเฮีย เป็นการสั่งให้แอพขอสิทธิ์ใช้อินเทอร์เน็ตบน Android
+          sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
           npx cap sync android
+        env:
+          # ส่วนนี้คือการดึงกุญแจจาก Secret ที่เฮียเพิ่งตั้งค่ามาใส่ในแอพครับ
+          VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
 
       - name: Build with Gradle
         run: |
