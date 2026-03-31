@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 48 100% 98%;
+    --foreground: 40 15% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 40 15% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 40 15% 11%;
+
+    --primary: 45 100% 51%;
+    --primary-foreground: 40 15% 11%;
+
+    --secondary: 38 90% 62%;
+    --secondary-foreground: 40 15% 11%;
+
+    --muted: 45 30% 95%;
+    --muted-foreground: 40 10% 45%;
+
+    --accent: 45 30% 92%;
+    --accent-foreground: 40 15% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 20% 88%;
+    --input: 40 20% 88%;
+    --ring: 45 100% 51%;
+
+    --radius: 1rem;
+
+    /* Custom tokens */
+    --engine-google: 207 100% 40%;
+    --engine-gemini: 263 90% 66%;
+    --engine-gpt: 160 60% 40%;
+    --surface-elevated: 0 0% 100%;
+    --surface-input: 45 20% 97%;
+
+    --font-display: 'Inter', system-ui, sans-serif;
+    --font-body: 'Roboto', system-ui, sans-serif;
+
+    --shadow-card: 0 2px 12px -2px hsl(40 15% 11% / 0.08);
+    --shadow-elevated: 0 8px 30px -8px hsl(40 15% 11% / 0.12);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+  }
+}
