@@ -24,26 +24,25 @@ jobs:
       - name: Install Dependencies & Fix Hardware
         run: |
           npm install --legacy-peer-deps
-          # ติดตั้งปลั๊กอินเชื่อมต่อเครื่อง (แก้ไขชื่อให้ถูกต้องแล้วครับ)
-          npm install @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
+          # ติดตั้งเครื่องมือจัดการไอคอนและปลั๊กอินเสียง/กล้อง (แก้ไขชื่อให้ถูกต้องแล้วครับ)
+          npm install @capacitor/assets @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
           
           npm run build
           rm -rf android
           npx cap add android
           
-          # --- แก้ไขไอคอนแอปจากไฟล์ที่เฮียอัปโหลดไว้ ---
+          # --- คำสั่งปั้นไอคอนจากไฟล์ public/icon.png ของเฮีย ---
           npx capacitor-assets generate --android --assetPath public/icon.png
           
-          # --- บังคับเขียนสิทธิ์ขอใช้ กล้อง/ไมค์/เน็ต ลงในระดับระบบ Android ---
+          # --- เขียนสิทธิ์ขอใช้เน็ต กล้อง และไมค์ ลงในระบบ Android ---
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-feature android:name="android.hardware.camera" android:required="false" />' android/app/src/main/AndroidManifest.xml
           
           npx cap sync android
         env:
-          # ดึงกุญแจแปลภาษาจาก Secrets ที่เฮียตั้งไว้ในรูป image_1f333c.png
+          # ใส่กุญแจแปลภาษาที่เฮียตั้งค่าไว้ใน Repository Secrets
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -57,5 +56,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HiaOuan-App-Final-V2
+          name: HiaOuan-App-Ultimate
           path: android/app/build/outputs/apk/debug/app-debug.apk
