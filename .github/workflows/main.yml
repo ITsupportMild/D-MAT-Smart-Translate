@@ -13,7 +13,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '21' # อิงตามที่ระบบต้องการ
           distribution: 'temurin'
 
       - name: Set up Node.js
@@ -21,28 +21,32 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Dependencies & Generate Assets
+      - name: Install Dependencies & Plugins
         run: |
           npm install --legacy-peer-deps
-          # ติดตั้งเครื่องมือปั้นไอคอนและปลั๊กอินที่ขาดไป
-          npm install @capacitor/assets @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
+          # ติดตั้งปลั๊กอินเชื่อมต่ออุปกรณ์มือถือ (ไมค์, กล้อง, เสียงอ่าน)
+          npm install @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
           
           npm run build
           rm -rf android
           npx cap add android
           
-          # --- คำสั่งเปลี่ยนไอคอนแอพ ---
-          # บรรทัดนี้จะหยิบไฟล์ในรูป image_20239d.png มาปั้นเป็นไอคอนครับ
+          # --- คำสั่งเปลี่ยนไอคอนแอปจากรูปที่เฮียลงไว้ ---
           npx capacitor-assets generate --android --assetPath public/icon.png
           
-          # --- ตั้งค่าสิทธิ์เครื่อง (กล้อง/เน็ต/ไมค์) ---
+          # --- บังคับเขียนสิทธิ์การใช้งานลงในไฟล์ระบบ Android (AndroidManifest) ---
+          # 1. สิทธิ์อินเทอร์เน็ต (แปลภาษา)
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          # 2. สิทธิ์กล้อง (ถ่ายรูป)
           sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
-          sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-feature android:name="android.hardware.camera" />' android/app/src/main/AndroidManifest.xml
+          # 3. สิทธิ์ไมโครโฟน (บันทึกเสียง)
+          sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
+          sed -i '/<application/i <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />' android/app/src/main/AndroidManifest.xml
           
           npx cap sync android
         env:
+          # ดึงกุญแจแปลภาษาจาก Secret ที่เฮียตั้งไว้
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -56,5 +60,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HiaOuan-App-Complete
+          name: HiaOuan-App-Ultimate
           path: android/app/build/outputs/apk/debug/app-debug.apk
