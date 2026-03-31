@@ -21,17 +21,21 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Dependencies & Plugins
+      - name: Install Dependencies & Generate Assets
         run: |
           npm install --legacy-peer-deps
-          # 1. ติดตั้งปลั๊กอินสำหรับ กล้อง และ เสียงอ่าน (ที่ใน package.json เฮียยังไม่มี)
-          npm install @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
+          # ติดตั้งเครื่องมือปั้นไอคอนและปลั๊กอินที่ขาดไป
+          npm install @capacitor/assets @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
           
           npm run build
           rm -rf android
           npx cap add android
           
-          # 2. เขียนสิทธิ์ขอใช้ กล้อง และ ไมค์ ลงในระบบ Android
+          # --- คำสั่งเปลี่ยนไอคอนแอพ ---
+          # บรรทัดนี้จะหยิบไฟล์ในรูป image_20239d.png มาปั้นเป็นไอคอนครับ
+          npx capacitor-assets generate --android --assetPath public/icon.png
+          
+          # --- ตั้งค่าสิทธิ์เครื่อง (กล้อง/เน็ต/ไมค์) ---
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
@@ -52,5 +56,5 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HiaOuan-App-Debug
+          name: HiaOuan-App-Complete
           path: android/app/build/outputs/apk/debug/app-debug.apk
