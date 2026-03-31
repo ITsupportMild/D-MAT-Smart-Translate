@@ -1,7 +1,7 @@
 name: Build Android APK
 on:
   push:
-    branches: [ main ] # หรือชื่อ Branch ที่เฮียใช้
+    branches: [ main ]
 
 jobs:
   build:
@@ -18,7 +18,7 @@ jobs:
 
       - name: Install Node & Dependencies
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build
           npx cap sync android
 
