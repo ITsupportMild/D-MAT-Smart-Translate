@@ -16,7 +16,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Node.js  # เพิ่มขั้นตอนนี้เข้าไปครับ
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -25,6 +25,7 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm run build
+          npx cap add android || true  # เพิ่มบรรทัดนี้เพื่อสร้างโฟลเดอร์ android
           npx cap sync android
 
       - name: Build with Gradle
