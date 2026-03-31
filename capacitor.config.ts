@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.08fd44f3a7de4453b8142220f5019333',
+  appId: 'com.hiaouan.smarttranslate',
   appName: 'AI Translate',
   webDir: 'dist',
   server: {
