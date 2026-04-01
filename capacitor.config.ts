@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hiaouan.smarttranslate', // หรือชื่อที่เฮียตั้งไว้ล่าสุด
+  appId: 'com.hiaouan.smarttranslate', 
   appName: 'D-MAT Smart Translate',
-  webDir: 'dist' // ตรงนี้สำคัญมาก ต้องมั่นใจว่าเป็น 'dist'
+  webDir: 'dist' 
 };
 
 export default config;
