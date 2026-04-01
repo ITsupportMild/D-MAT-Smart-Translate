@@ -24,17 +24,17 @@ jobs:
       - name: Install Dependencies & Fix Hardware
         run: |
           npm install --legacy-peer-deps
-          # ติดตั้งเครื่องมือจัดการไอคอนและปลั๊กอินเสียง/กล้อง (แก้ไขชื่อให้ถูกต้องแล้วครับ)
+          # ติดตั้งเครื่องมือจัดการไอคอนและปลั๊กอินเสียง/กล้อง
           npm install @capacitor/assets @capacitor/camera @capacitor/filesystem @capacitor/preferences @capacitor-community/text-to-speech --legacy-peer-deps
           
           npm run build
           rm -rf android
           npx cap add android
           
-          # --- คำสั่งปั้นไอคอนจากไฟล์ public/icon.png ของเฮีย ---
+          # --- คำสั่งปั้นไอคอนจากไฟล์ public/icon.png  ---
           npx capacitor-assets generate --android --assetPath public/icon.png
           
-          # --- เขียนสิทธิ์ขอใช้เน็ต กล้อง และไมค์ ลงในระบบ Android ---
+          # --- สิทธิ์ขอใช้เน็ต กล้อง และไมค์ ลงในระบบ Android ---
           sed -i '/<application/i <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.CAMERA" />' android/app/src/main/AndroidManifest.xml
           sed -i '/<application/i <uses-permission android:name="android.permission.RECORD_AUDIO" />' android/app/src/main/AndroidManifest.xml
@@ -42,7 +42,7 @@ jobs:
           
           npx cap sync android
         env:
-          # ใส่กุญแจแปลภาษาที่เฮียตั้งค่าไว้ใน Repository Secrets
+          # API  Repository Secrets
           VITE_SUPABASE_PROJECT_ID: ${{ secrets.VITE_SUPABASE_PROJECT_ID }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
