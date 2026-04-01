@@ -27,25 +27,23 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
   const recognitionRef = useRef<any>(null);
   const detectedLang = useMemo(() => detectLangClient(value), [value]);
 
-  // --- ส่วนที่ 1: แก้ให้กล้องดีดออกมาทันที ---
+  // --- ฟังก์ชันเปิดกล้องถ่ายสด (Capacitor) ---
   const handleCameraClick = async () => {
     try {
       const image = await CapCamera.getPhoto({
         quality: 90,
         allowEditing: false,
         resultType: CameraResultType.Base64,
-        source: CameraSource.Camera // บังคับเปิดกล้องถ่ายสดเท่านั้น
+        source: CameraSource.Camera 
       });
-
       if (image.base64String) {
         onImageCapture(`data:image/jpeg;base64,${image.base64String}`);
       }
     } catch (error) {
-      console.log("User cancelled or camera error");
+      console.log("User cancelled camera");
     }
   };
 
-  // --- ส่วนที่ 2: แก้ให้ไมค์เสถียรขึ้นบน Android ---
   const toggleSpeech = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -55,33 +53,25 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("ระบบ Android ของเฮียยังไม่เปิดสิทธิ์การพิมพ์ด้วยเสียงครับ");
+      alert("ระบบไม่รองรับการพิมพ์ด้วยเสียง");
       return;
     }
 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'th-TH'; // ตั้งค่าเริ่มต้นเป็นภาษาไทย
+    recognition.lang = 'th-TH'; 
     recognitionRef.current = recognition;
 
     recognition.onresult = (event: any) => {
       let finalParts = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalParts += event.results[i][0].transcript;
-        }
+        if (event.results[i].isFinal) finalParts += event.results[i][0].transcript;
       }
-      if (finalParts) {
-        onChange(value + (value && !value.endsWith(" ") ? " " : "") + finalParts);
-      }
+      if (finalParts) onChange(value + (value && !value.endsWith(" ") ? " " : "") + finalParts);
     };
 
-    recognition.onerror = (e: any) => {
-      console.error(e);
-      setIsListening(false);
-    };
-    
+    recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
     
     try {
@@ -112,8 +102,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
         <div className="absolute top-3 right-3 flex items-center gap-1.5">
           {detectedLang && (
             <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-display font-semibold text-primary">
-              <Globe size={10} />
-              {detectedLang}
+              <Globe size={10} /> {detectedLang}
             </span>
           )}
           <button onClick={onClear} className="p-1 text-muted-foreground hover:text-foreground">
@@ -123,7 +112,6 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
       )}
 
       <div className="absolute bottom-3 left-3 flex items-center gap-2">
-        {/* ปุ่มไมค์ */}
         <button
           onClick={toggleSpeech}
           className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
@@ -133,7 +121,6 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
           {isListening ? <MicOff size={20} /> : <Mic size={20} />}
         </button>
 
-        {/* ปุ่มกล้อง (เรียกใช้ฟังก์ชันใหม่) */}
         <button
           onClick={handleCameraClick}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-accent"
