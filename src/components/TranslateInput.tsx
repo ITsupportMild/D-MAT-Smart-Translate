@@ -1,5 +1,6 @@
 import { X, Mic, MicOff, Camera, Globe } from "lucide-react";
 import { useState, useRef, useMemo } from "react";
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface Props {
   value: string;
@@ -16,9 +17,6 @@ function detectLangClient(text: string): string | null {
   if (/[\u0E00-\u0E7F]/.test(t)) return "ไทย";
   if (/[\u4E00-\u9FFF\u3400-\u4DBF]/.test(t)) return "中文";
   if (/[\u3040-\u309F\u30A0-\u30FF]/.test(t)) return "日本語";
-  if (/[\uAC00-\uD7AF]/.test(t)) return "한국어";
-  if (/[\u0600-\u06FF]/.test(t)) return "العربية";
-  if (/[\u0900-\u097F]/.test(t)) return "हिन्दी";
   if (/[\u0400-\u04FF]/.test(t)) return "Русский";
   if (/[a-zA-Z]/.test(t)) return "English";
   return null;
@@ -27,10 +25,26 @@ function detectLangClient(text: string): string | null {
 export default function TranslateInput({ value, onChange, onClear, onTranslate, onImageCapture, isLoading }: Props) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const baseTextRef = useRef("");
 
   const detectedLang = useMemo(() => detectLangClient(value), [value]);
+
+  // --- จุดที่แก้: ใช้ Capacitor Camera บังคับเปิดกล้องสด ---
+  const handleCameraClick = async () => {
+    try {
+      const image = await CapCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera // บังคับเปิดกล้องเท่านั้น
+      });
+
+      if (image.base64String) {
+        onImageCapture(`data:image/jpeg;base64,${image.base64String}`);
+      }
+    } catch (error) {
+      console.error("Camera error:", error);
+    }
+  };
 
   const toggleSpeech = () => {
     if (isListening) {
@@ -48,43 +62,23 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "";
-
-    baseTextRef.current = value;
+    recognitionRef.current = recognition;
 
     recognition.onresult = (event: any) => {
       let finalParts = "";
-      let interim = "";
       for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           finalParts += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
         }
       }
-      const base = baseTextRef.current;
-      const separator = base && !base.endsWith(" ") ? " " : "";
-      onChange(base + separator + finalParts + interim);
+      onChange(value + (value && !value.endsWith(" ") ? " " : "") + finalParts);
     };
 
     recognition.onerror = () => setIsListening(false);
     recognition.onend = () => setIsListening(false);
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    
     setIsListening(true);
-  };
-
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result as string;
-      onImageCapture(base64);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+    recognition.start();
   };
 
   return (
@@ -111,11 +105,8 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
               {detectedLang}
             </span>
           )}
-          <button
-            onClick={onClear}
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          >
-            <X size={18} />
+          <button onClick={onClear} className="p-1 text-muted-foreground hover:text-foreground">
+            <X size={16} />
           </button>
         </div>
       )}
@@ -124,36 +115,27 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
         <button
           onClick={toggleSpeech}
           className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
-            isListening
-              ? "bg-destructive text-destructive-foreground animate-pulse"
-              : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            isListening ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-muted text-muted-foreground hover:bg-accent"
           }`}
-          title="พูดเพื่อพิมพ์"
         >
           {isListening ? <MicOff size={20} /> : <Mic size={20} />}
         </button>
 
+        {/* ปุ่มกล้องใหม่ที่เรียกใช้ฟังก์ชัน handleCameraClick */}
         <button
-          onClick={() => fileInputRef.current?.click()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-          title="ถ่ายรูปหรือเลือกรูปเพื่อแปล"
+          onClick={handleCameraClick}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-accent"
+          title="ถ่ายรูปเพื่อแปล"
         >
           <Camera size={20} />
         </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageSelect}
-          className="hidden"
-        />
       </div>
 
       <div className="absolute bottom-3 right-3">
         <button
           onClick={onTranslate}
           disabled={!value.trim() || isLoading}
-          className="rounded-xl bg-primary px-5 py-2 font-display text-sm font-medium text-primary-foreground shadow-card transition-all hover:shadow-elevated disabled:opacity-40 disabled:shadow-none"
+          className="rounded-xl bg-primary px-5 py-2 font-display text-sm font-medium text-primary-foreground shadow-card transition-all hover:opacity-90 disabled:opacity-50"
         >
           {isLoading ? "กำลังแปล..." : "แปล"}
         </button>
