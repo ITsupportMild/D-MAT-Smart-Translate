@@ -1,5 +1,5 @@
 import { X, Mic, MicOff, Camera, Globe } from "lucide-react";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface Props {
@@ -11,28 +11,30 @@ interface Props {
   isLoading: boolean;
 }
 
-// --- ปรับปรุงการดีเทคภาษาให้แม่นยำขึ้น ---
 function detectLangClient(text: string): string | null {
   const t = text.trim();
   if (!t) return null;
-  
-  // เช็กตามลำดับความสำคัญของตัวอักษร
   if (/[\u0E00-\u0E7F]/.test(t)) return "ไทย";
   if (/[\u4E00-\u9FFF]/.test(t)) return "中文";
   if (/[\u3040-\u309F\u30A0-\u30FF]/.test(t)) return "日本語";
   if (/[\u1100-\u11FF\uAC00-\uD7AF]/.test(t)) return "한국어";
-  if (/[\u0400-\u04FF]/.test(t)) return "Русский";
-  
-  // ถ้ามีแต่ภาษาอังกฤษหรือตัวเลข
-  if (/^[a-zA-Z0-9\s.,!?-]+$/.test(t)) return "English";
-  
+  if (/[a-zA-Z]/.test(t)) return "English";
   return "อัตโนมัติ";
 }
 
 export default function TranslateInput({ value, onChange, onClear, onTranslate, onImageCapture, isLoading }: Props) {
   const [isListening, setIsListening] = useState(false);
+  const [shouldAutoTranslate, setShouldAutoTranslate] = useState(false);
   const recognitionRef = useRef<any>(null);
   const detectedLang = useMemo(() => detectLangClient(value), [value]);
+
+  // --- หัวใจหลัก: ถ้าข้อความเปลี่ยนจากไมค์ ให้สั่งแปลทันที ---
+  useEffect(() => {
+    if (shouldAutoTranslate && value.trim() !== "" && !isLoading) {
+      onTranslate();
+      setShouldAutoTranslate(false); // แปลเสร็จแล้วปิดสวิตช์รอครั้งต่อไป
+    }
+  }, [value, shouldAutoTranslate, isLoading, onTranslate]);
 
   const handleCameraClick = async () => {
     try {
@@ -64,23 +66,16 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
     }
 
     const recognition = new SpeechRecognition();
-    // ปิด continuous เพื่อลดปัญหาคำเบิ้ลสะสม และเพิ่มความแม่นยำในการตัดประโยค
     recognition.continuous = false; 
-    recognition.interimResults = false; // เอาเฉพาะผลลัพธ์สุดท้ายที่ชัวร์แล้วเท่านั้น แก้ปัญหาคำเบิ้ล
+    recognition.interimResults = false; 
     recognition.lang = 'th-TH'; 
     recognitionRef.current = recognition;
 
     recognition.onresult = (event: any) => {
-      // ดึงคำพูดเฉพาะประโยคล่าสุดที่พูดจบจริงๆ
       const transcript = event.results[0][0].transcript;
-      
       if (transcript) {
-        onChange(transcript); // เขียนทับหรือต่อท้ายแบบสะอาดๆ
-        
-        // ดีเลย์นิดนึงเพื่อให้ State อัปเดตก่อนสั่งแปล
-        setTimeout(() => {
-          onTranslate();
-        }, 300);
+        onChange(transcript); // ใส่คำพูดลงไป
+        setShouldAutoTranslate(true); // เปิดสวิตช์บอกแอปว่า "คำพูดมาแล้ว แปลได้เลย!"
       }
     };
 
@@ -106,7 +101,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
             onTranslate();
           }
         }}
-        placeholder="กดไมค์แล้วพูดได้เลย..."
+        placeholder="กดไมค์แล้วพูดเพื่อแปลทันที..."
         rows={5}
         className="w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-14 font-body text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
       />
