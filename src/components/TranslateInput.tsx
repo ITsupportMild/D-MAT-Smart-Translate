@@ -1,5 +1,5 @@
 import { X, Mic, MicOff, Camera, Globe } from "lucide-react";
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 interface Props {
@@ -27,7 +27,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
   const recognitionRef = useRef<any>(null);
   const detectedLang = useMemo(() => detectLangClient(value), [value]);
 
-  // --- ฟังก์ชันเปิดกล้องถ่ายสด (Capacitor) ---
+  // --- ฟังก์ชันเปิดกล้อง ---
   const handleCameraClick = async () => {
     try {
       const image = await CapCamera.getPhoto({
@@ -44,6 +44,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
     }
   };
 
+  // --- ฟังก์ชันไมค์แบบพูดจบแล้วแปลทันที ---
   const toggleSpeech = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -58,7 +59,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
     }
 
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false; // เปลี่ยนเป็น false เพื่อให้จบเป็นประโยคๆ ไป
     recognition.interimResults = true;
     recognition.lang = 'th-TH'; 
     recognitionRef.current = recognition;
@@ -66,13 +67,22 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
     recognition.onresult = (event: any) => {
       let finalParts = "";
       for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) finalParts += event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalParts += event.results[i][0].transcript;
+        }
       }
-      if (finalParts) onChange(value + (value && !value.endsWith(" ") ? " " : "") + finalParts);
+      
+      if (finalParts) {
+        onChange(finalParts); // ใส่ข้อความที่พูดลงไป
+        // บังคับให้แปลทันทีหลังจากได้ข้อความที่จบประโยคแล้ว
+        setTimeout(() => {
+          onTranslate();
+        }, 500); 
+      }
     };
 
     recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => setIsListening(true); // ปล่อยให้มันรอฟังต่อถ้ายังไม่กดปิด
     
     try {
       recognition.start();
@@ -93,7 +103,7 @@ export default function TranslateInput({ value, onChange, onClear, onTranslate, 
             onTranslate();
           }
         }}
-        placeholder="พิมพ์หรือวางข้อความที่นี่..."
+        placeholder="พิมพ์หรือพูดเพื่อแปล..."
         rows={5}
         className="w-full resize-none rounded-2xl bg-transparent px-5 pt-5 pb-14 font-body text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
       />
